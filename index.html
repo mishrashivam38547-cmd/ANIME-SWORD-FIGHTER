@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D Shadow Fighting Game - 300 Levels</title>
+    <title>3D Sword Fighting Game - 300 Levels</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -58,23 +58,23 @@
         }
         #controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 15px;
             width: 100%;
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
             z-index: 10;
-            padding: 0 15px;
+            padding: 0 10px;
         }
         button {
-            padding: 14px 22px;
-            font-size: 15px;
+            padding: 12px 16px;
+            font-size: 13px;
             font-weight: bold;
             background: rgba(255, 255, 255, 0.12);
             color: white;
             border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
             backdrop-filter: blur(8px);
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
@@ -84,25 +84,28 @@
             background: rgba(255, 255, 255, 0.35);
             transform: scale(0.95);
         }
+        .skill-btn { border-color: #f39c12; color: #f39c12; }
     </style>
 </head>
 <body>
 
     <div id="ui">
-        <div>P1: <span id="p1-name">Shadow Knight</span></div>
+        <div>P1: <span id="p1-name">Swordsman</span></div>
         <div class="health-container"><div id="p1-health" class="health-bar"></div></div>
         <div class="health-container"><div id="p2-health" class="health-bar"></div></div>
-        <div>AI: <span id="p2-name">Rival</span></div>
+        <div>AI: <span id="p2-name">Shadow Blade</span></div>
     </div>
     
     <div id="level-info">STAGE <span id="current-level">1</span> / 300</div>
 
     <div id="controls">
-        <button onclick="movePlayer('left')">⬅️ Move</button>
-        <button onclick="movePlayer('right')">Move ➡️</button>
+        <button onclick="movePlayer('left')">⬅️</button>
+        <button onclick="movePlayer('right')">➡️</button>
         <button onclick="movePlayer('jump')">⬆️ Jump</button>
-        <button onclick="playerAttack('punch')" style="background: rgba(231, 76, 60, 0.3);">Punch (J)</button>
-        <button onclick="playerAttack('kick')" style="background: rgba(52, 152, 219, 0.3);">Kick (K)</button>
+        <button onclick="playerAttack('slash')" style="background: rgba(231, 76, 60, 0.3);">⚔️ Slash</button>
+        <button onclick="playerAttack('heavy')" style="background: rgba(192, 57, 43, 0.4);">🗡️ Heavy</button>
+        <button class="skill-btn" onclick="playerSkill('energy')">✨ Energy Slash</button>
+        <button class="skill-btn" onclick="playerSkill('spin')">🌀 Spin Blade</button>
     </div>
 
     <!-- Three.js CDN -->
@@ -111,7 +114,7 @@
         let scene, camera, renderer;
         let player, opponent;
         let p1Health = 100, p2Health = 100;
-        let p1VelocityY = 0, p2VelocityY = 0;
+        let p1VelocityY = 0;
         let isJumpingP1 = false;
         const gravity = 0.018;
         
@@ -132,72 +135,51 @@
             renderer.shadowMap.enabled = true;
             document.body.appendChild(renderer.domElement);
 
-            // Dramatic Arena Lighting
+            // Arena Lighting
             const ambientLight = new THREE.AmbientLight(0x223344, 1.2);
             scene.add(ambientLight);
 
             const spotLight = new THREE.SpotLight(0xffffff, 2.5);
             spotLight.position.set(0, 12, 6);
             spotLight.angle = Math.PI / 3;
-            spotLight.penumbra = 0.5;
             scene.add(spotLight);
 
-            const rimLight = new THREE.DirectionalLight(0x3498db, 1.5);
-            rimLight.position.set(-5, 5, -5);
-            scene.add(rimLight);
-
-            // Detailed Fighting Stage Floor
+            // Floor
             const floorGeo = new THREE.PlaneGeometry(40, 20);
             const floorMat = new THREE.MeshStandardMaterial({ color: 0x11161d, roughness: 0.5, metalness: 0.2 });
             const floor = new THREE.Mesh(floorGeo, floorMat);
             floor.rotation.x = -Math.PI / 2;
             scene.add(floor);
 
-            // Background Pillars / Cage Design
-            for(let i = -12; i <= 12; i += 4) {
-                const pillarGeo = new THREE.BoxGeometry(0.6, 12, 0.6);
-                const pillarMat = new THREE.MeshStandardMaterial({ color: 0x090d14, roughness: 0.9 });
-                const pillar = new THREE.Mesh(pillarGeo, pillarMat);
-                pillar.position.set(i, 6, -6);
-                scene.add(pillar);
-            }
-
-            // Create Dynamic Fighters
-            player = createRealisticFighter(0xe74c3c); // Red/Orange Theme
+            // Fighters with Swords
+            player = createSwordFighter(0xe74c3c, 0x3498db);
             player.position.set(-2.5, 0, 0);
             scene.add(player);
 
-            opponent = createRealisticFighter(0x3498db); // Blue Cyber Theme
+            opponent = createSwordFighter(0x9b59b6, 0xe67e22);
             opponent.position.set(2.5, 0, 0);
-            opponent.rotation.y = Math.PI; // Face player
+            opponent.rotation.y = Math.PI;
             scene.add(opponent);
-
-            // Keyboard support
-            window.addEventListener('keydown', (e) => {
-                if (e.key === 'd' || e.key === 'D') movePlayer('right');
-                if (e.key === 'a' || e.key === 'A') movePlayer('left');
-                if (e.key === 'w' || e.key === 'W') movePlayer('jump');
-                if (e.key === 'j' || e.key === 'J') playerAttack('punch');
-                if (e.key === 'k' || e.key === 'K') playerAttack('kick');
-            });
 
             window.addEventListener('resize', onWindowResize);
             animate();
         }
 
-        function createRealisticFighter(colorHex) {
+        function createSwordFighter(suitColor, swordColor) {
             const group = new THREE.Group();
-            const suitMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4 });
+            const suitMat = new THREE.MeshStandardMaterial({ color: suitColor, roughness: 0.4 });
             const skinMat = new THREE.MeshStandardMaterial({ color: 0xe0ac69, roughness: 0.6 });
             const jointMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8 });
+            const bladeMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.9, roughness: 0.1 });
+            const hiltMat = new THREE.MeshStandardMaterial({ color: swordColor, roughness: 0.3 });
 
-            // Torso (Upper body structure)
+            // Torso
             const torso = new THREE.Mesh(new THREE.BoxGeometry(0.65, 1.0, 0.35), suitMat);
             torso.position.y = 1.25;
             group.add(torso);
             group.userData.torso = torso;
 
-            // Head with helmet/hair vibe
+            // Head
             const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 16), skinMat);
             head.position.y = 1.95;
             group.add(head);
@@ -207,28 +189,36 @@
             leftArm.position.set(-0.45, 1.25, 0);
             group.add(leftArm);
 
-            // Right Arm (Punching limb container)
+            // Right Arm holding Sword
             const rightArmGroup = new THREE.Group();
             rightArmGroup.position.set(0.45, 1.5, 0);
-            const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.85, 0.18), jointMat);
-            rightArm.position.y = -0.3;
+            const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.7, 0.18), jointMat);
+            rightArm.position.y = -0.25;
             rightArmGroup.add(rightArm);
+
+            // Sword Mesh
+            const swordGroup = new THREE.Group();
+            swordGroup.position.set(0, -0.6, 0.1);
+            
+            const hilt = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.25, 0.1), hiltMat);
+            swordGroup.add(hilt);
+
+            const blade = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.3, 0.03), bladeMat);
+            blade.position.y = 0.75;
+            swordGroup.add(blade);
+
+            rightArmGroup.add(swordGroup);
             group.add(rightArmGroup);
             group.userData.rightArmGroup = rightArmGroup;
 
-            // Left Leg
+            // Legs
             const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.95, 0.22), jointMat);
             leftLeg.position.set(-0.2, 0.5, 0);
             group.add(leftLeg);
 
-            // Right Leg (Kicking limb container)
-            const rightLegGroup = new THREE.Group();
-            rightLegGroup.position.set(0.2, 0.9, 0);
             const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.95, 0.22), jointMat);
-            rightLeg.position.y = -0.45;
-            rightLegGroup.add(rightLeg);
-            group.add(rightLegGroup);
-            group.userData.rightLegGroup = rightLegGroup;
+            rightLeg.position.set(0.2, 0.5, 0);
+            group.add(rightLeg);
 
             return group;
         }
@@ -243,69 +233,79 @@
         }
 
         function triggerShake() {
-            shakeTimer = 8; // Screen frames to shake
+            shakeTimer = 8;
         }
 
         function playerAttack(type) {
-            let damage = type === 'punch' ? 6 : 11;
+            let damage = type === 'slash' ? 10 : 18;
 
-            if (type === 'punch') {
-                // Realistic combat leaning and striking animation
-                player.userData.torso.rotation.x = -0.2;
-                player.userData.rightArmGroup.rotation.x = -1.2;
-                setTimeout(() => {
-                    player.userData.torso.rotation.x = 0;
-                    player.userData.rightArmGroup.rotation.x = 0;
-                }, 120);
-            } else if (type === 'kick') {
-                player.userData.torso.rotation.x = 0.15;
-                player.userData.rightLegGroup.rotation.x = -1.4;
-                setTimeout(() => {
-                    player.userData.torso.rotation.x = 0;
-                    player.userData.rightLegGroup.rotation.x = 0;
-                }, 150);
-            }
+            // Sword Slash Animation
+            player.userData.rightArmGroup.rotation.x = -1.5;
+            player.userData.torso.rotation.y = 0.3;
+            setTimeout(() => {
+                player.userData.rightArmGroup.rotation.x = 0;
+                player.userData.torso.rotation.y = 0;
+            }, 150);
 
             let dist = Math.abs(player.position.x - opponent.position.x);
-            if (dist < 2.2) {
+            if (dist < 2.5) {
                 p2Health = Math.max(0, p2Health - damage);
                 document.getElementById('p2-health').style.width = p2Health + '%';
                 triggerShake();
                 
-                // Knockback impact effect
-                opponent.position.x = Math.min(7, opponent.position.x + 0.5);
-                opponent.userData.torso.rotation.x = 0.4; // Recoil pain
-                setTimeout(() => { opponent.userData.torso.rotation.x = 0; }, 150);
+                opponent.position.x = Math.min(7, opponent.position.x + 0.6);
+                checkWin();
+            }
+        }
 
+        function playerSkill(skillType) {
+            if (skillType === 'energy') {
+                // Unique Skill 1: Energy Slash Beam
+                let damage = 25;
+                player.userData.rightArmGroup.rotation.z = -0.8;
+                setTimeout(() => { player.userData.rightArmGroup.rotation.z = 0; }, 200);
+
+                p2Health = Math.max(0, p2Health - damage);
+                document.getElementById('p2-health').style.width = p2Health + '%';
+                triggerShake();
+                opponent.position.x = Math.min(7, opponent.position.x + 1.2);
+                checkWin();
+            } else if (skillType === 'spin') {
+                // Unique Skill 2: 360 Spin Blade
+                let damage = 30;
+                let originalRot = player.rotation.y;
+                player.rotation.y += Math.PI * 2;
+                setTimeout(() => { player.rotation.y = originalRot; }, 300);
+
+                p2Health = Math.max(0, p2Health - damage);
+                document.getElementById('p2-health').style.width = p2Health + '%';
+                triggerShake();
+                opponent.position.x = Math.min(7, opponent.position.x + 1.5);
                 checkWin();
             }
         }
 
         function aiLogic() {
-            let currentAiSpeed = 0.035 + Math.min(currentLevel * 0.0006, 0.045);
-            let currentAiChance = 0.02 + Math.min(currentLevel * 0.00035, 0.035);
+            let currentAiSpeed = 0.035 + Math.min(currentLevel * 0.0005, 0.04);
+            let currentAiChance = 0.02 + Math.min(currentLevel * 0.0003, 0.03);
 
-            // AI tracking movement towards player
-            if (Math.abs(player.position.x - opponent.position.x) > 1.4) {
+            if (Math.abs(player.position.x - opponent.position.x) > 1.6) {
                 let dir = player.position.x > opponent.position.x ? currentAiSpeed : -currentAiSpeed;
                 opponent.position.x += dir;
             }
 
-            // AI Attack behavior
             let dist = Math.abs(player.position.x - opponent.position.x);
-            if (dist < 2.0 && Math.random() < currentAiChance) {
-                opponent.userData.rightArmGroup.rotation.x = -1.2;
-                setTimeout(() => { opponent.userData.rightArmGroup.rotation.x = 0; }, 120);
+            if (dist < 2.3 && Math.random() < currentAiChance) {
+                opponent.userData.rightArmGroup.rotation.x = -1.5;
+                setTimeout(() => { opponent.userData.rightArmGroup.rotation.x = 0; }, 150);
 
-                let aiDamage = 4 + Math.floor(currentLevel * 0.09);
+                // Barabar power - AI damage scales moderately with levels
+                let aiDamage = 8 + Math.floor(currentLevel * 0.05);
                 p1Health = Math.max(0, p1Health - aiDamage);
                 document.getElementById('p1-health').style.width = p1Health + '%';
                 triggerShake();
 
-                player.position.x = Math.max(-7, player.position.x - 0.4);
-                player.userData.torso.rotation.x = 0.4;
-                setTimeout(() => { player.userData.torso.rotation.x = 0; }, 150);
-
+                player.position.x = Math.max(-7, player.position.x - 0.5);
                 checkWin();
             }
         }
@@ -316,10 +316,10 @@
                 resetMatch();
             } else if (p2Health <= 0) {
                 if (currentLevel >= maxLevel) {
-                    alert("Legendary Victory! You conquered all 300 Stages!");
+                    alert("Legendary Champion! You completed all 300 Stages!");
                     currentLevel = 1;
                 } else {
-                    alert("Stage " + currentLevel + " Cleared! Entering Stage " + (currentLevel + 1));
+                    alert("Stage " + currentLevel + " Cleared! Moving to Stage " + (currentLevel + 1));
                     currentLevel++;
                 }
                 document.getElementById('current-level').innerText = currentLevel;
@@ -339,7 +339,6 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // Player Jumping Physics
             if (isJumpingP1) {
                 player.position.y += p1VelocityY;
                 p1VelocityY -= gravity;
@@ -350,7 +349,6 @@
                 }
             }
 
-            // Screen Shake Effect Handling
             if (shakeTimer > 0) {
                 camera.position.x = (Math.random() - 0.5) * 0.3;
                 camera.position.y = 3.2 + (Math.random() - 0.5) * 0.3;
