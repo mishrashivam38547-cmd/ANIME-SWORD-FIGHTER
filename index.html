@@ -169,21 +169,28 @@
             head.position.y = 1.85;
             group.add(head);
 
+            // Left Arm
             const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.9, 0.2), limbMat);
             leftArm.position.set(-0.5, 1.1, 0);
             group.add(leftArm);
+            group.userData.leftArm = leftArm;
 
+            // Right Arm (Punching arm)
             const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.9, 0.2), limbMat);
             rightArm.position.set(0.5, 1.1, 0);
             group.add(rightArm);
+            group.userData.rightArm = rightArm;
 
+            // Left Leg
             const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.0, 0.25), limbMat);
             leftLeg.position.set(-0.2, 0.5, 0);
             group.add(leftLeg);
 
+            // Right Leg (Kicking leg)
             const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.0, 0.25), limbMat);
             rightLeg.position.set(0.2, 0.5, 0);
             group.add(rightLeg);
+            group.userData.rightLeg = rightLeg;
 
             return group;
         }
@@ -199,6 +206,24 @@
 
         function playerAttack(type) {
             let damage = type === 'punch' ? 5 : 10;
+
+            // Punch Animation (Right arm moves forward)
+            if (type === 'punch') {
+                player.userData.rightArm.position.z = 0.6;
+                setTimeout(() => {
+                    player.userData.rightArm.position.z = 0;
+                }, 150);
+            } 
+            // Kick Animation (Right leg moves forward/up)
+            else if (type === 'kick') {
+                player.userData.rightLeg.position.z = 0.6;
+                player.userData.rightLeg.rotation.x = -0.5;
+                setTimeout(() => {
+                    player.userData.rightLeg.position.z = 0;
+                    player.userData.rightLeg.rotation.x = 0;
+                }, 150);
+            }
+
             let dist = Math.abs(player.position.x - opponent.position.x);
             if (dist < 2.0) {
                 p2Health = Math.max(0, p2Health - damage);
@@ -210,7 +235,6 @@
         }
 
         function aiLogic() {
-            // AI speed scales slightly with level up to a limit
             let currentAiSpeed = 0.03 + Math.min(currentLevel * 0.0005, 0.04);
             let currentAiChance = 0.015 + Math.min(currentLevel * 0.0003, 0.03);
 
@@ -220,7 +244,13 @@
             }
             let dist = Math.abs(player.position.x - opponent.position.x);
             if (dist < 1.8 && Math.random() < currentAiChance) {
-                let aiDamage = 4 + Math.floor(currentLevel * 0.08); // Scales damage progressively up to level 300
+                // AI Punch Animation
+                opponent.userData.rightArm.position.z = -0.6;
+                setTimeout(() => {
+                    opponent.userData.rightArm.position.z = 0;
+                }, 150);
+
+                let aiDamage = 4 + Math.floor(currentLevel * 0.08);
                 p1Health = Math.max(0, p1Health - aiDamage);
                 document.getElementById('p1-health').style.width = p1Health + '%';
                 player.position.x -= 0.4;
