@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Sword Fighter</title>
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #131c2e;
+            border: 1px solid #1f2d4a;
+            border-radius: 16px;
+            padding: 24px;
+            width: 350px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+        .subtitle {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+        .fighters-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .fighter-card {
+            background-color: #1a2744;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .fighter-card.selected {
+            border-color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+        .fighter-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 8px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+        #kaze-avatar { background: radial-gradient(circle, #38bdf8, #1d4ed8); }
+        #raiden-avatar { background: radial-gradient(circle, #f43f5e, #be123c); }
+        #yami-avatar { background: radial-gradient(circle, #a855f7, #6b21a8); }
+        
+        .fighter-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .fighter-desc {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .start-btn {
+            background: linear-gradient(135deg, #f43f5e, #fb7185);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            width: 100%;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .start-btn:active {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>⚔️ ANIME SWORD FIGHTER</h1>
+        <div class="subtitle">VERSION 2 • CHOOSE YOUR WARRIOR</div>
+
+        <div class="fighters-grid">
+            <div class="fighter-card selected" onclick="selectFighter('kaze', this)">
+                <div class="fighter-avatar" id="kaze-avatar">⚡</div>
+                <div class="fighter-name">KAZE</div>
+                <div class="fighter-desc">Balanced • Wind Slash</div>
+            </div>
+
+            <div class="fighter-card" onclick="selectFighter('raiden', this)">
+                <div class="fighter-avatar" id="raiden-avatar">⚡</div>
+                <div class="fighter-name">RAIDEN</div>
+                <div class="fighter-desc">Fast • Lightning</div>
+            </div>
+
+            <div class="fighter-card" onclick="selectFighter('yami', this)">
+                <div class="fighter-avatar" id="yami-avatar">🌑</div>
+                <div class="fighter-name">YAMI</div>
+                <div class="fighter-desc">Heavy • Dark Strike</div>
+            </div>
+        </div>
+
+        <button class="start-btn" onclick="startBattle()">START BATTLE</button>
+    </div>
+
+    <script>
+        let selectedFighter = 'kaze';
+
+        function selectFighter(fighter, element) {
+            document.querySelectorAll('.fighter-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            selectedFighter = fighter;
+        }
+
+        function startBattle() {
+            alert('Battle starting with ' + selectedFighter.toUpperCase() + '!');
+            // Aap yaha apna game start hone ka agla logic ya redirection likh sakte hain
+        }
+    </script>
+
+</body>
+</html>
