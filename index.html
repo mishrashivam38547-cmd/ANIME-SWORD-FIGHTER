@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D Fighting Game</title>
+    <title>3D Fighting Game - 300 Levels</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
             margin: 0;
             overflow: hidden;
@@ -30,7 +28,7 @@
             z-index: 10;
         }
         .health-container {
-            width: 35%;
+            width: 30%;
             background: #444;
             border: 2px solid #fff;
             height: 20px;
@@ -43,16 +41,15 @@
             background: #e74c3c;
             transition: width 0.2s ease;
         }
-        #p2-health {
-            background: #3498db;
-        }
-        #instructions {
+        #p2-health { background: #3498db; }
+        #level-info {
             position: absolute;
             top: 40px;
             width: 100%;
             text-align: center;
-            color: #aaa;
-            font-size: 12px;
+            color: #f1c40f;
+            font-size: 14px;
+            font-weight: bold;
             z-index: 10;
         }
         #controls {
@@ -77,21 +74,19 @@
             cursor: pointer;
             backdrop-filter: blur(5px);
         }
-        button:active {
-            background: rgba(255, 255, 255, 0.5);
-        }
+        button:active { background: rgba(255, 255, 255, 0.5); }
     </style>
 </head>
 <body>
 
     <div id="ui">
-        <div>P1: <span id="p1-name">Fighter</span></div>
+        <div>P1: <span id="p1-name">Warrior</span></div>
         <div class="health-container"><div id="p1-health" class="health-bar"></div></div>
         <div class="health-container"><div id="p2-health" class="health-bar"></div></div>
         <div>AI: <span id="p2-name">Shadow</span></div>
     </div>
     
-    <div id="instructions">A/D: Move | W: Jump | J: Punch | K: Kick</div>
+    <div id="level-info">Level: <span id="current-level">1</span> / 300</div>
 
     <div id="controls">
         <button onclick="movePlayer('left')">⬅️ Left</button>
@@ -110,6 +105,9 @@
         let p1VelocityY = 0;
         let isJumpingP1 = false;
         const gravity = 0.015;
+        
+        let currentLevel = 1;
+        const maxLevel = 300;
 
         function init() {
             scene = new THREE.Scene();
@@ -130,54 +128,62 @@
             directionalLight.position.set(5, 10, 7);
             scene.add(directionalLight);
 
+            // Floor
             const floorGeo = new THREE.PlaneGeometry(30, 15);
             const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.8 });
             const floor = new THREE.Mesh(floorGeo, floorMat);
             floor.rotation.x = -Math.PI / 2;
             scene.add(floor);
 
+            // Back Wall
             const wallGeo = new THREE.BoxGeometry(30, 10, 0.5);
             const wallMat = new THREE.MeshStandardMaterial({ color: 0x11161d });
             const backWall = new THREE.Mesh(wallGeo, wallMat);
             backWall.position.set(0, 5, -7.5);
             scene.add(backWall);
 
-            const p1Mat = new THREE.MeshStandardMaterial({ color: 0xe74c3c });
-            player = createFighter(p1Mat);
+            // Fighters
+            player = createDetailedFighter(0xe74c3c);
             player.position.set(-2, 0, 0);
             scene.add(player);
 
-            const p2Mat = new THREE.MeshStandardMaterial({ color: 0x3498db });
-            opponent = createFighter(p2Mat);
+            opponent = createDetailedFighter(0x3498db);
             opponent.position.set(2, 0, 0);
             scene.add(opponent);
-
-            window.addEventListener('keydown', (e) => {
-                if (e.key === 'd' || e.key === 'D') player.position.x += 0.4;
-                if (e.key === 'a' || e.key === 'A') player.position.x -= 0.4;
-                if ((e.key === 'w' || e.key === 'W') && !isJumpingP1) {
-                    p1VelocityY = 0.3;
-                    isJumpingP1 = true;
-                }
-                if (e.key === 'j' || e.key === 'J') playerAttack('punch');
-                if (e.key === 'k' || e.key === 'K') playerAttack('kick');
-            });
 
             window.addEventListener('resize', onWindowResize);
             animate();
         }
 
-        function createFighter(material) {
+        function createDetailedFighter(colorHex) {
             const group = new THREE.Group();
-            const torsoGeo = new THREE.BoxGeometry(0.8, 1.2, 0.4);
-            const torso = new THREE.Mesh(torsoGeo, material);
-            torso.position.y = 1.2;
+            const mat = new THREE.MeshStandardMaterial({ color: colorHex });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
+            const limbMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.1, 0.4), mat);
+            torso.position.y = 1.1;
             group.add(torso);
 
-            const headGeo = new THREE.SphereGeometry(0.3, 16, 16);
-            const head = new THREE.Mesh(headGeo, new THREE.MeshStandardMaterial({ color: 0xffdbac }));
-            head.position.y = 2.0;
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), skinMat);
+            head.position.y = 1.85;
             group.add(head);
+
+            const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.9, 0.2), limbMat);
+            leftArm.position.set(-0.5, 1.1, 0);
+            group.add(leftArm);
+
+            const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.9, 0.2), limbMat);
+            rightArm.position.set(0.5, 1.1, 0);
+            group.add(rightArm);
+
+            const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.0, 0.25), limbMat);
+            leftLeg.position.set(-0.2, 0.5, 0);
+            group.add(leftLeg);
+
+            const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.0, 0.25), limbMat);
+            rightLeg.position.set(0.2, 0.5, 0);
+            group.add(rightLeg);
 
             return group;
         }
@@ -197,38 +203,50 @@
             if (dist < 2.0) {
                 p2Health = Math.max(0, p2Health - damage);
                 document.getElementById('p2-health').style.width = p2Health + '%';
-                opponent.position.x += 0.3;
-                setTimeout(() => opponent.position.x -= 0.3, 100);
+                opponent.position.x += 0.4;
+                setTimeout(() => opponent.position.x -= 0.4, 100);
                 checkWin();
             }
         }
 
         function aiLogic() {
-            if (Math.random() < 0.03) {
-                let dir = player.position.x > opponent.position.x ? 0.05 : -0.05;
+            // AI speed scales slightly with level up to a limit
+            let currentAiSpeed = 0.03 + Math.min(currentLevel * 0.0005, 0.04);
+            let currentAiChance = 0.015 + Math.min(currentLevel * 0.0003, 0.03);
+
+            if (Math.random() < 0.04) {
+                let dir = player.position.x > opponent.position.x ? currentAiSpeed : -currentAiSpeed;
                 opponent.position.x += dir;
             }
             let dist = Math.abs(player.position.x - opponent.position.x);
-            if (dist < 1.8 && Math.random() < 0.02) {
-                p1Health = Math.max(0, p1Health - 5);
+            if (dist < 1.8 && Math.random() < currentAiChance) {
+                let aiDamage = 4 + Math.floor(currentLevel * 0.08); // Scales damage progressively up to level 300
+                p1Health = Math.max(0, p1Health - aiDamage);
                 document.getElementById('p1-health').style.width = p1Health + '%';
-                player.position.x -= 0.3;
-                setTimeout(() => player.position.x += 0.3, 100);
+                player.position.x -= 0.4;
+                setTimeout(() => player.position.x += 0.4, 100);
                 checkWin();
             }
         }
 
         function checkWin() {
             if (p1Health <= 0) {
-                alert("Opponent Wins! Game Over.");
-                resetGame();
+                alert("You Lost! Restarting Level " + currentLevel);
+                resetMatch();
             } else if (p2Health <= 0) {
-                alert("Player Wins! Victory!");
-                resetGame();
+                if (currentLevel >= maxLevel) {
+                    alert("Congratulations! You completed all 300 Levels and won the game!");
+                    currentLevel = 1;
+                } else {
+                    alert("Level " + currentLevel + " Cleared! Moving to Level " + (currentLevel + 1));
+                    currentLevel++;
+                }
+                document.getElementById('current-level').innerText = currentLevel;
+                resetMatch();
             }
         }
 
-        function resetGame() {
+        function resetMatch() {
             p1Health = 100;
             p2Health = 100;
             document.getElementById('p1-health').style.width = '100%';
