@@ -61,6 +61,7 @@
             justify-content: center;
             align-items: center;
             font-weight: bold;
+            font-size: 24px;
         }
         #kaze-avatar { background: radial-gradient(circle, #38bdf8, #1d4ed8); }
         #raiden-avatar { background: radial-gradient(circle, #f43f5e, #be123c); }
@@ -85,10 +86,6 @@
             font-weight: bold;
             font-size: 14px;
             cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .start-btn:active {
-            opacity: 0.8;
         }
         .hidden {
             display: none !important;
@@ -98,17 +95,69 @@
         }
         .arena-title {
             color: #38bdf8;
-            font-size: 18px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .health-container {
             margin-bottom: 15px;
+            text-align: left;
+            font-size: 12px;
+        }
+        .health-bar-bg {
+            background-color: #1a2744;
+            border-radius: 4px;
+            height: 10px;
+            width: 100%;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+        .health-bar {
+            height: 100%;
+            width: 100%;
+            background-color: #22c55e;
+            transition: width 0.3s ease;
+        }
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .action-btn {
+            flex: 1;
+            background-color: #38bdf8;
+            color: #0b0f19;
+            border: none;
+            border-radius: 6px;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .action-btn:active {
+            opacity: 0.8;
+        }
+        .battle-log {
+            background-color: #0b0f19;
+            border: 1px solid #1f2d4a;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 11px;
+            color: #94a3b8;
+            height: 50px;
+            overflow-y: auto;
+            margin-top: 10px;
+            text-align: left;
         }
         .back-btn {
             background-color: #334155;
             color: white;
             border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            margin-top: 15px;
+            border-radius: 6px;
+            padding: 6px 12px;
+            margin-top: 12px;
             cursor: pointer;
+            font-size: 11px;
         }
     </style>
 </head>
@@ -143,17 +192,38 @@
             <button class="start-btn" onclick="startBattle()">START BATTLE</button>
         </div>
 
-        <!-- Battle Screen (Initially Hidden) -->
+        <!-- Battle Screen -->
         <div id="battle-screen" class="battle-arena hidden">
-            <div class="arena-title">🔥 BATTLE IN PROGRESS 🔥</div>
-            <p>Selected Warrior: <span id="chosen-fighter-name" style="color: #f43f5e; font-weight: bold;"></span></p>
-            <p style="color: #94a3b8; font-size: 12px;">Yaha aapka game play ya fight area chalega.</p>
+            <div class="arena-title">🔥 BATTLE ARENA 🔥</div>
+            
+            <div class="health-container">
+                <div>Enemy HP: <span id="enemy-hp-text">100</span>%</div>
+                <div class="health-bar-bg"><div id="enemy-health" class="health-bar"></div></div>
+            </div>
+
+            <div style="font-size: 32px; margin: 10px 0;" id="fighter-icon">⚡</div>
+            <div style="font-size: 13px; font-weight: bold;" id="chosen-fighter-name"></div>
+
+            <div class="health-container" style="margin-top: 10px;">
+                <div>Your HP: <span id="player-hp-text">100</span>%</div>
+                <div class="health-bar-bg"><div id="player-health" class="health-bar" style="background-color: #38bdf8;"></div></div>
+            </div>
+
+            <div class="action-btns">
+                <button class="action-btn" onclick="playerAttack()">ATTACK</button>
+                <button class="action-btn" style="background-color: #f43f5e; color: white;" onclick="specialMove()">SPECIAL</button>
+            </div>
+
+            <div id="battle-log" class="battle-log">Battle started! Choose your move.</div>
+
             <button class="back-btn" onclick="goBack()">CHOOSE AGAIN</button>
         </div>
     </div>
 
     <script>
         let selectedFighter = 'kaze';
+        let playerHp = 100;
+        let enemyHp = 100;
 
         function selectFighter(fighter, element) {
             document.querySelectorAll('.fighter-card').forEach(card => {
@@ -164,16 +234,77 @@
         }
 
         function startBattle() {
-            // Selection screen ko chupaye aur battle screen ko dikhaye
             document.getElementById('selection-screen').classList.add('hidden');
             document.getElementById('battle-screen').classList.remove('hidden');
             
-            // Chosen fighter ka naam display kare
             document.getElementById('chosen-fighter-name').innerText = selectedFighter.toUpperCase();
+            let icon = '⚡';
+            if(selectedFighter === 'yami') icon = '🌑';
+            document.getElementById('fighter-icon').innerText = icon;
+
+            playerHp = 100;
+            enemyHp = 100;
+            updateHealth();
+            logMessage("Match started against Shadow Shadow!");
+        }
+
+        function playerAttack() {
+            if(playerHp <= 0 || enemyHp <= 0) return;
+            
+            let damageToEnemy = Math.floor(Math.random() * 15) + 10;
+            enemyHp = Math.max(0, enemyHp - damageToEnemy);
+            logMessage("Aapne " + damageToEnemy + " damage diya!");
+
+            checkWin();
+            if(enemyHp > 0) {
+                setTimeout(enemyTurn, 600);
+            }
+            updateHealth();
+        }
+
+        function specialMove() {
+            if(playerHp <= 0 || enemyHp <= 0) return;
+
+            let damageToEnemy = Math.floor(Math.random() * 25) + 15;
+            enemyHp = Math.max(0, enemyHp - damageToEnemy);
+            logMessage("Special Move! " + damageToEnemy + " heavy damage diya!");
+
+            checkWin();
+            if(enemyHp > 0) {
+                setTimeout(enemyTurn, 600);
+            }
+            updateHealth();
+        }
+
+        function enemyTurn() {
+            let damageToPlayer = Math.floor(Math.random() * 12) + 8;
+            playerHp = Math.max(0, playerHp - damageToPlayer);
+            logMessage("Enemy ne aapko " + damageToPlayer + " damage diya!");
+            
+            checkWin();
+            updateHealth();
+        }
+
+        function updateHealth() {
+            document.getElementById('player-health').style.width = playerHp + '%';
+            document.getElementById('player-hp-text').innerText = playerHp;
+            document.getElementById('enemy-health').style.width = enemyHp + '%';
+            document.getElementById('enemy-hp-text').innerText = enemyHp;
+        }
+
+        function logMessage(msg) {
+            document.getElementById('battle-log').innerText = msg;
+        }
+
+        function checkWin() {
+            if(enemyHp === 0) {
+                logMessage("🎉 Aapne match jeet liya!");
+            } else if(playerHp === 0) {
+                logMessage("💥 Aap haar gaye! Phir se koshish karein.");
+            }
         }
 
         function goBack() {
-            // Wapas selection screen par aaye
             document.getElementById('battle-screen').classList.add('hidden');
             document.getElementById('selection-screen').classList.remove('hidden');
         }
