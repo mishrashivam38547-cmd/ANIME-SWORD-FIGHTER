@@ -90,35 +90,66 @@
         .start-btn:active {
             opacity: 0.8;
         }
+        .hidden {
+            display: none !important;
+        }
+        .battle-arena {
+            text-align: center;
+        }
+        .arena-title {
+            color: #38bdf8;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .back-btn {
+            background-color: #334155;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            margin-top: 15px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>⚔️ ANIME SWORD FIGHTER</h1>
-        <div class="subtitle">VERSION 2 • CHOOSE YOUR WARRIOR</div>
+        <!-- Selection Screen -->
+        <div id="selection-screen">
+            <h1>⚔️ ANIME SWORD FIGHTER</h1>
+            <div class="subtitle">VERSION 2 • CHOOSE YOUR WARRIOR</div>
 
-        <div class="fighters-grid">
-            <div class="fighter-card selected" onclick="selectFighter('kaze', this)">
-                <div class="fighter-avatar" id="kaze-avatar">⚡</div>
-                <div class="fighter-name">KAZE</div>
-                <div class="fighter-desc">Balanced • Wind Slash</div>
+            <div class="fighters-grid">
+                <div class="fighter-card selected" onclick="selectFighter('kaze', this)">
+                    <div class="fighter-avatar" id="kaze-avatar">⚡</div>
+                    <div class="fighter-name">KAZE</div>
+                    <div class="fighter-desc">Balanced • Wind Slash</div>
+                </div>
+
+                <div class="fighter-card" onclick="selectFighter('raiden', this)">
+                    <div class="fighter-avatar" id="raiden-avatar">⚡</div>
+                    <div class="fighter-name">RAIDEN</div>
+                    <div class="fighter-desc">Fast • Lightning</div>
+                </div>
+
+                <div class="fighter-card" onclick="selectFighter('yami', this)">
+                    <div class="fighter-avatar" id="yami-avatar">🌑</div>
+                    <div class="fighter-name">YAMI</div>
+                    <div class="fighter-desc">Heavy • Dark Strike</div>
+                </div>
             </div>
 
-            <div class="fighter-card" onclick="selectFighter('raiden', this)">
-                <div class="fighter-avatar" id="raiden-avatar">⚡</div>
-                <div class="fighter-name">RAIDEN</div>
-                <div class="fighter-desc">Fast • Lightning</div>
-            </div>
-
-            <div class="fighter-card" onclick="selectFighter('yami', this)">
-                <div class="fighter-avatar" id="yami-avatar">🌑</div>
-                <div class="fighter-name">YAMI</div>
-                <div class="fighter-desc">Heavy • Dark Strike</div>
-            </div>
+            <button class="start-btn" onclick="startBattle()">START BATTLE</button>
         </div>
 
-        <button class="start-btn" onclick="startBattle()">START BATTLE</button>
+        <!-- Battle Screen (Initially Hidden) -->
+        <div id="battle-screen" class="battle-arena hidden">
+            <div class="arena-title">🔥 BATTLE IN PROGRESS 🔥</div>
+            <p>Selected Warrior: <span id="chosen-fighter-name" style="color: #f43f5e; font-weight: bold;"></span></p>
+            <p style="color: #94a3b8; font-size: 12px;">Yaha aapka game play ya fight area chalega.</p>
+            <button class="back-btn" onclick="goBack()">CHOOSE AGAIN</button>
+        </div>
     </div>
 
     <script>
@@ -133,8 +164,18 @@
         }
 
         function startBattle() {
-            alert('Battle starting with ' + selectedFighter.toUpperCase() + '!');
-            // Aap yaha apna game start hone ka agla logic ya redirection likh sakte hain
+            // Selection screen ko chupaye aur battle screen ko dikhaye
+            document.getElementById('selection-screen').classList.add('hidden');
+            document.getElementById('battle-screen').classList.remove('hidden');
+            
+            // Chosen fighter ka naam display kare
+            document.getElementById('chosen-fighter-name').innerText = selectedFighter.toUpperCase();
+        }
+
+        function goBack() {
+            // Wapas selection screen par aaye
+            document.getElementById('battle-screen').classList.add('hidden');
+            document.getElementById('selection-screen').classList.remove('hidden');
         }
     </script>
 
